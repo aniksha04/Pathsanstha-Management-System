@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block page_title %}Apply for Society Loan{% endblock %}
+
+{% block content %}
+<div style="max-width: 680px; margin: 0 auto;">
+    <div class="card-panel">
+        <div class="card-header">
+            <div>
+                <h3>Apply for Member Loan</h3>
+                <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+                    Initiate new cooperative society credit facility for an active member.
+                </p>
+            </div>
+            <a href="{% url 'loan_list' %}" class="btn btn-outline btn-sm">← Back to Loans</a>
+        </div>
+        <div class="card-body">
+            <form method="POST">
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                <div class="alert-box error">{{ form.non_field_errors }}</div>
+                {% endif %}
+
+                <div class="form-group">
+                    <label class="form-label">Select Active Member</label>
+                    {{ form.member }}
+                    {{ form.member.errors }}
+                    <div class="form-text">Borrower must have active membership in this branch</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Loan Product / Scheme</label>
+                    {{ form.loan_product }}
+                    {{ form.loan_product.errors }}
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                    <div class="form-group">
+                        <label class="form-label">Principal Amount (₹)</label>
+                        {{ form.principal_amount }}
+                        {{ form.principal_amount.errors }}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Tenure (in Months)</label>
+                        {{ form.tenure_months }}
+                        {{ form.tenure_months.errors }}
+                    </div>
+                </div>
+
+                <div style="margin-top: 24px; display: flex; gap: 12px;">
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">
+                        Submit Loan Application
+                    </button>
+                    <a href="{% url 'loan_list' %}" class="btn btn-outline">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

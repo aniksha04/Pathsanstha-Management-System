@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block page_title %}Branch Network{% endblock %}
+
+{% block content %}
+<div class="card-panel">
+    <div class="card-header">
+        <div>
+            <h3>Society Branches</h3>
+            <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+                Operational branches of Pathsanstha Co-operative Credit Society.
+            </p>
+        </div>
+        {% if is_admin %}
+        <div>
+            <a href="{% url 'branch_create' %}" class="btn btn-primary">
+                ＋ Register New Branch
+            </a>
+        </div>
+        {% endif %}
+    </div>
+    <div class="card-body" style="padding: 0;">
+        <div class="table-responsive">
+            <table class="banking-table">
+                <thead>
+                    <tr>
+                        <th>Branch Code</th>
+                        <th>Branch Name</th>
+                        <th>Phone</th>
+                        <th>Registered Members</th>
+                        <th>Accounts</th>
+                        <th>Active Loans</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for branch in branches %}
+                    <tr>
+                        <td><strong>{{ branch.branch_code }}</strong></td>
+                        <td>{{ branch.branch_name }}</td>
+                        <td>{{ branch.phone }}</td>
+                        <td>{{ branch.member_count }}</td>
+                        <td>{{ branch.account_count }}</td>
+                        <td>{{ branch.loan_count }}</td>
+                        <td>
+                            {% if branch.is_active %}
+                                <span class="badge badge-active">Active</span>
+                            {% else %}
+                                <span class="badge badge-inactive">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'branch_detail' branch.pk %}" class="btn btn-outline btn-sm">
+                                View Details
+                            </a>
+                            {% if is_admin %}
+                            <a href="{% url 'branch_edit' branch.pk %}" class="btn btn-outline btn-sm">
+                                ✎ Edit
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" style="text-align: center; padding: 30px; color: var(--text-muted);">
+                            No branches registered.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,237 @@
+{% extends "base.html" %}
+
+{% block page_title %}Member Profile: {{ member.full_name }}{% endblock %}
+
+{% block content %}
+<!-- Member Profile Header Card -->
+<div class="card-panel">
+    <div class="card-header" style="flex-wrap: wrap; gap: 12px;">
+        <div style="display: flex; align-items: center; gap: 14px;">
+            <div style="width: 48px; height: 48px; background: var(--emerald-light); color: var(--emerald); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: bold;">
+                {{ member.full_name|slice:":1" }}
+            </div>
+            <div>
+                <h3 style="font-size: 18px;">{{ member.full_name }}</h3>
+                <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+                    Member ID: <strong style="color: var(--primary);">{{ member.member_number }}</strong> • 
+                    Branch: <strong>{{ member.branch.branch_name }}</strong> • 
+                    Member Since: {{ member.joined_date|date:"d M Y" }}
+                </p>
+            </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+            {% if can_manage_members %}
+            <a href="{% url 'member_edit' member.pk %}" class="btn btn-outline btn-sm">✎ Edit Details</a>
+            <a href="{% url 'account_create' %}?member={{ member.pk }}" class="btn btn-primary btn-sm">＋ Open Account</a>
+            {% endif %}
+            <a href="{% url 'loan_apply' %}?member={{ member.pk }}" class="btn btn-gold btn-sm">₹ Apply Loan</a>
+            
+            {% if can_manage_members %}
+            <form method="POST" action="{% url 'member_toggle_status' member.pk %}" style="display: inline-flex; align-items: center; gap: 6px;">
+                {% csrf_token %}
+                <select name="status" onchange="this.form.submit()" class="form-control" style="padding: 4px 8px; font-size: 12px; width: auto;">
+                    <option value="ACTIVE" {% if member.status == 'ACTIVE' %}selected{% endif %}>Active</option>
+                    <option value="INACTIVE" {% if member.status == 'INACTIVE' %}selected{% endif %}>Inactive</option>
+                    <option value="SUSPENDED" {% if member.status == 'SUSPENDED' %}selected{% endif %}>Suspended</option>
+                </select>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card-body">
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; font-size: 13px;">
+            <div>
+                <div style="color: var(--text-muted); font-size: 11px; text-transform: uppercase;">Phone</div>
+                <div style="font-weight: 600; margin-top: 2px;">{{ member.phone }}</div>
+            </div>
+            <div>
+                <div style="color: var(--text-muted); font-size: 11px; text-transform: uppercase;">Email</div>
+                <div style="font-weight: 600; margin-top: 2px;">{{ member.email|default:"None" }}</div>
+            </div>
+            <div>
+                <div style="color: var(--text-muted); font-size: 11px; text-transform: uppercase;">Date of Birth / Gender</div>
+                <div style="font-weight: 600; margin-top: 2px;">{{ member.date_of_birth|date:"d M Y" }} ({{ member.gender }})</div>
+            </div>
+            <div>
+                <div style="color: var(--text-muted); font-size: 11px; text-transform: uppercase;">Status</div>
+                <div style="margin-top: 2px;">
+                    <span class="badge {% if member.status == 'ACTIVE' %}badge-active{% elif member.status == 'SUSPENDED' %}badge-pending{% else %}badge-inactive{% endif %}">
+                        {{ member.status }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border-subtle); font-size: 13px;">
+            <span style="color: var(--text-muted); font-size: 11px; text-transform: uppercase;">Address:</span>
+            <span style="margin-left: 6px;">{{ member.address }}</span>
+        </div>
+    </div>
+</div>
+
+<!-- Associated Accounts -->
+<div class="card-panel">
+    <div class="card-header">
+        <h3>Deposit & Savings Accounts</h3>
+        {% if can_manage_members %}
+        <a href="{% url 'account_create' %}?member={{ member.pk }}" class="btn btn-outline btn-sm">＋ Add Account</a>
+        {% endif %}
+    </div>
+    <div class="card-body" style="padding: 0;">
+        <div class="table-responsive">
+            <table class="banking-table">
+                <thead>
+                    <tr>
+                        <th>Account Number</th>
+                        <th>Account Type</th>
+                        <th>Opening Balance</th>
+                        <th>Current Balance</th>
+                        <th>Opened At</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for acc in accounts %}
+                    <tr>
+                        <td><strong>{{ acc.account_number }}</strong></td>
+                        <td>{{ acc.account_type.get_name_display|default:acc.account_type.name }}</td>
+                        <td>₹{{ acc.opening_balance|floatformat:2 }}</td>
+                        <td><strong style="color: var(--primary); font-size: 15px;">₹{{ acc.current_balance|floatformat:2 }}</strong></td>
+                        <td>{{ acc.opened_at|date:"d M Y" }}</td>
+                        <td><span class="badge badge-active">{{ acc.status }}</span></td>
+                        <td>
+                            <a href="{% url 'account_detail' acc.pk %}" class="btn btn-outline btn-sm">View Ledger</a>
+                            <a href="{% url 'deposit_create' %}?account={{ acc.pk }}" class="btn btn-primary btn-sm">Deposit</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 24px; color: var(--text-muted);">
+                            No active accounts found for this member.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Loans History -->
+<div class="card-panel">
+    <div class="card-header">
+        <h3>Loan Applications & Portfolio</h3>
+        <a href="{% url 'loan_apply' %}?member={{ member.pk }}" class="btn btn-gold btn-sm">Apply For Loan</a>
+    </div>
+    <div class="card-body" style="padding: 0;">
+        <div class="table-responsive">
+            <table class="banking-table">
+                <thead>
+                    <tr>
+                        <th>Loan Number</th>
+                        <th>Loan Product</th>
+                        <th>Principal Amount</th>
+                        <th>Tenure</th>
+                        <th>Outstanding Balance</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for l in loans %}
+                    <tr>
+                        <td><strong>{{ l.loan_number }}</strong></td>
+                        <td>{{ l.loan_product.loan_name }}</td>
+                        <td>₹{{ l.principal_amount|floatformat:2 }}</td>
+                        <td>{{ l.tenure_months }} Months</td>
+                        <td><strong style="color: var(--danger);">₹{{ l.outstanding_balance|floatformat:2 }}</strong></td>
+                        <td>
+                            <span class="badge {% if l.status == 'DISBURSED' %}badge-disbursed{% elif l.status == 'APPROVED' %}badge-approved{% elif l.status == 'PENDING' %}badge-pending{% else %}badge-inactive{% endif %}">
+                                {{ l.status }}
+                            </span>
+                        </td>
+                        <td>
+                            <a href="{% url 'loan_detail' l.pk %}" class="btn btn-outline btn-sm">
+                                View Details / EMI
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 24px; color: var(--text-muted);">
+                            No loan history recorded for this member.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Transactions (Deposits, Withdrawals, Repayments) -->
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+    <!-- Deposits -->
+    <div class="card-panel">
+        <div class="card-header">
+            <h3>Recent Deposits</h3>
+            <a href="{% url 'deposit_create' %}" class="btn btn-outline btn-sm">＋ Deposit</a>
+        </div>
+        <div class="card-body" style="padding: 0;">
+            <table class="banking-table">
+                <thead>
+                    <tr>
+                        <th>Txn ID</th>
+                        <th>Date</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for d in deposits %}
+                    <tr>
+                        <td><a href="{% url 'transaction_detail' d.pk %}" style="color: var(--primary); text-decoration: none;">{{ d.transaction_number }}</a></td>
+                        <td>{{ d.created_at|date:"d-m-Y H:i" }}</td>
+                        <td><strong style="color: var(--emerald);">+₹{{ d.amount|floatformat:2 }}</strong></td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="3" style="text-align: center; color: var(--text-muted); padding: 18px;">No deposits recorded.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Withdrawals -->
+    <div class="card-panel">
+        <div class="card-header">
+            <h3>Recent Withdrawals</h3>
+            <a href="{% url 'withdrawal_create' %}" class="btn btn-outline btn-sm">↗ Withdraw</a>
+        </div>
+        <div class="card-body" style="padding: 0;">
+            <table class="banking-table">
+                <thead>
+                    <tr>
+                        <th>Txn ID</th>
+                        <th>Date</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for w in withdrawals %}
+                    <tr>
+                        <td><a href="{% url 'transaction_detail' w.pk %}" style="color: var(--primary); text-decoration: none;">{{ w.transaction_number }}</a></td>
+                        <td>{{ w.created_at|date:"d-m-Y H:i" }}</td>
+                        <td><strong style="color: var(--danger);">-₹{{ w.amount|floatformat:2 }}</strong></td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="3" style="text-align: center; color: var(--text-muted); padding: 18px;">No withdrawals recorded.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

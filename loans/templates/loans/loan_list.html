@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block page_title %}Loan Portfolio & Credit Management{% endblock %}
+
+{% block content %}
+<div class="card-panel">
+    <div class="card-header">
+        <div>
+            <h3>Society Loan Applications & Accounts</h3>
+            <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+                Total Disbursed Portfolio: <strong style="color: var(--primary);">₹{{ total_portfolio|floatformat:2 }}</strong> • 
+                Outstanding Balance: <strong style="color: var(--danger);">₹{{ total_outstanding|floatformat:2 }}</strong>
+            </p>
+        </div>
+        <div>
+            <a href="{% url 'loan_apply' %}" class="btn btn-primary">
+                ＋ Apply for Loan
+            </a>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div style="padding: 16px 20px; background: #fafcfb; border-bottom: 1px solid var(--border);">
+        <form method="GET" style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
+            <div style="flex: 2; min-width: 200px;">
+                <input type="text" name="q" value="{{ search_query }}" placeholder="Search loan number or borrower name..." class="form-control" style="padding: 8px 12px;">
+            </div>
+
+            <div style="flex: 1; min-width: 140px;">
+                <select name="status" class="form-control" style="padding: 8px 12px;">
+                    <option value="">All Statuses</option>
+                    <option value="PENDING" {% if status_filter == 'PENDING' %}selected{% endif %}>Pending Approval</option>
+                    <option value="APPROVED" {% if status_filter == 'APPROVED' %}selected{% endif %}>Approved (Ready to Disburse)</option>
+                    <option value="DISBURSED" {% if status_filter == 'DISBURSED' %}selected{% endif %}>Disbursed (Active)</option>
+                    <option value="CLOSED" {% if status_filter == 'CLOSED' %}selected{% endif %}>Closed / Repaid</option>
+                    <option value="REJECTED" {% if status_filter == 'REJECTED' %}selected{% endif %}>Rejected</option>
+                </select>
+            </div>
+
+            <div style="flex: 1; min-width: 150px;">
+                <select name="product" class="form-control" style="padding: 8px 12px;">
+                    <option value="">All Loan Schemes</option>
+                    {% for p in loan_products %}
+                    <option value="{{ p.id }}" {% if product_filter == p.id|stringformat:"s" %}selected{% endif %}>{{ p.loan_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            {% if branches %}
+            <div style="flex: 1; min-width: 150px;">
+                <select name="branch" class="form-control" style="padding: 8px 12px;">
+                    <option value="">All Branches</option>
+                    {% for b in branches %}
+                    <option value="{{ b.id }}" {% if branch_filter == b.id|stringformat:"s" %}selected{% endif %}>{{ b.branch_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+
+            <div>
+                <button type="submit" class="btn btn-primary">Filter</button>
+                {% if search_query or status_filter or product_filter or branch_filter %}
+                <a href="{% url 'loan_list' %}" class="btn btn-outline">Clear</a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    <div class="card-body" style="padding: 0;">
+        <div class="table-responsive">
+            <table class="banking-table">
+                <thead>
+                    <tr>
+                        <th>Loan ID</th>
+                        <th>Borrower</th>
+                        <th>Product / Scheme</th>
+                        <th>Branch</th>
+                        <th>Principal</th>
+                        <th>Rate / Tenure</th>
+                        <th>Outstanding</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for l in loans %}
+                    <tr>
+                        <td><strong>{{ l.loan_number }}</strong></td>
+                        <td>
+                            <a href="{% url 'member_detail' l.member.pk %}" style="color: var(--primary); font-weight: 600; text-decoration: none;">
+                                {{ l.member.full_name }}
+                            </a>
+                        </td>
+                        <td>{{ l.loan_product.loan_name }}</td>
+                        <td>{{ l.branch.branch_name }}</td>
+                        <td><strong>₹{{ l.principal_amount|floatformat:2 }}</strong></td>
+                        <td>{{ l.interest_rate }}% ({{ l.tenure_months }}M)</td>
+                        <td><strong style="color: var(--danger);">₹{{ l.outstanding_balance|floatformat:2 }}</strong></td>
+                        <td>
+                            <span class="badge {% if l.status == 'DISBURSED' %}badge-disbursed{% elif l.status == 'APPROVED' %}badge-approved{% elif l.status == 'PENDING' %}badge-pending{% else %}badge-inactive{% endif %}">
+                                {{ l.status }}
+                            </span>
+                        </td>
+                        <td>
+                            <a href="{% url 'loan_detail' l.pk %}" class="btn btn-outline btn-sm">
+                                View / Manage
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" style="text-align: center; padding: 36px; color: var(--text-muted);">
+                            No loan accounts found matching the criteria.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

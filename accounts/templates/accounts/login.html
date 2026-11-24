@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In | Pathsanstha Cooperative Credit Society</title>
+    <style>
+        :root {
+            --primary: #104936;
+            --emerald: #176b50;
+            --emerald-light: #e8f5ef;
+            --gold: #c69b45;
+            --cream: #f6f8f6;
+            --white: #ffffff;
+            --text-dark: #1b2e25;
+            --text-muted: #62776d;
+            --border: #dce7e1;
+            --danger: #b33636;
+            --danger-bg: #fdf2f2;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: var(--cream);
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .login-card {
+            background: var(--white);
+            width: 100%;
+            max-width: 440px;
+            border-radius: 14px;
+            box-shadow: 0 10px 30px rgba(16, 73, 54, 0.08);
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .login-header {
+            background: var(--primary);
+            color: var(--white);
+            padding: 36px 30px 28px;
+            text-align: center;
+            border-bottom: 2px solid var(--gold);
+        }
+
+        .emblem {
+            width: 50px;
+            height: 50px;
+            background: var(--gold);
+            color: var(--primary);
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            font-weight: bold;
+            margin-bottom: 14px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        }
+
+        .login-header h1 {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .login-header p {
+            font-size: 12px;
+            color: #b5d5c5;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 5px;
+        }
+
+        .login-body {
+            padding: 32px 30px;
+        }
+
+        .alerts {
+            margin-bottom: 20px;
+        }
+
+        .alert-error {
+            background: var(--danger-bg);
+            color: var(--danger);
+            border: 1px solid rgba(179, 54, 54, 0.2);
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            margin-bottom: 10px;
+        }
+
+        .alert-info {
+            background: var(--emerald-light);
+            color: var(--emerald);
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            margin-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 7px;
+        }
+
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 12px 14px;
+            font-size: 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: #fafcfb;
+            color: var(--text-dark);
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        input[type="text"]:focus, input[type="password"]:focus {
+            border-color: var(--emerald);
+            background: var(--white);
+            box-shadow: 0 0 0 3px rgba(23, 107, 80, 0.12);
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 13px;
+            background: var(--emerald);
+            color: var(--white);
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            margin-top: 10px;
+        }
+
+        .btn-submit:hover {
+            background: var(--primary);
+        }
+
+        .login-footer {
+            padding: 18px 30px 24px;
+            text-align: center;
+            border-top: 1px solid var(--border);
+            font-size: 12px;
+            color: var(--text-muted);
+            background: #fafcfb;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-card">
+        <div class="login-header">
+            <div class="emblem">✦</div>
+            <h1>Pathsanstha</h1>
+            <p>Cooperative Credit Society ERP</p>
+        </div>
+
+        <div class="login-body">
+            {% if messages %}
+            <div class="alerts">
+                {% for message in messages %}
+                <div class="alert-{% if message.tags == 'error' %}error{% else %}info{% endif %}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <form method="POST">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="id_username">Staff Username</label>
+                    {{ form.username }}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_password">Password</label>
+                    {{ form.password }}
+                </div>
+
+                <button type="submit" class="btn-submit">
+                    Sign In Securely
+                </button>
+            </form>
+        </div>
+
+        <div class="login-footer">
+            Cooperative Credit Society Management Platform • Windows 11 Verified
+        </div>
+    </div>
+
+</body>
+</html>

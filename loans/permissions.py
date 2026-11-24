@@ -1,0 +1,21 @@
+# Re-exporting centralized permissions for backwards compatibility
+from accounts.permissions import (
+    get_staff_profile,
+    get_user_role,
+    get_user_branch,
+    is_admin,
+    is_manager,
+    is_accountant,
+    can_manage_members,
+    can_manage_branches,
+    can_manage_staff,
+    can_approve_loans,
+    can_disburse_loans,
+    can_perform_transactions,
+    filter_by_branch,
+    check_branch_access,
+    role_required,
+    admin_required,
+    manager_required,
+    accountant_required,
+)

@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+
+{% block page_title %}Loan {{ loan.loan_number }} Details{% endblock %}
+
+{% block content %}
+<div class="card-panel">
+    <div class="card-header" style="flex-wrap: wrap; gap: 12px;">
+        <div>
+            <h3>Loan Account: {{ loan.loan_number }}</h3>
+            <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+                Borrower: <strong>{{ loan.member.full_name }}</strong> ({{ loan.member.member_number }}) • 
+                Branch: <strong>{{ loan.branch.branch_name }}</strong> • 
+                Applied: {{ loan.applied_at|date:"d M Y" }}
+            </p>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            {% if loan.status == 'PENDING' and can_approve %}
+            <form method="POST" action="{% url 'loan_approve' loan.pk %}" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary btn-sm" onclick="return confirm('Confirm approval of this loan application?')">
+                    ✓ Approve Loan
+                </button>
+            </form>
+            <form method="POST" action="{% url 'loan_reject' loan.pk %}" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Confirm rejection of this loan application?')">
+                    ✗ Reject Loan
+                </button>
+            </form>
+            {% endif %}
+
+            <a href="{% url 'loan_list' %}" class="btn btn-outline btn-sm">← Back to Loans</a>
+        </div>
+    </div>
+
+    <div class="card-body">
+        <!-- Overview Grid -->
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 22px;">
+            <div style="background: var(--cream-bg); padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Principal Amount</div>
+                <div style="font-size: 20px; font-weight: 700; color: var(--primary); margin-top: 4px;">
+                    ₹{{ loan.principal_amount|floatformat:2 }}
+                </div>
+            </div>
+            <div style="background: var(--cream-bg); padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Outstanding Balance</div>
+                <div style="font-size: 20px; font-weight: 700; color: var(--danger); margin-top: 4px;">
+                    ₹{{ loan.outstanding_balance|floatformat:2 }}
+                </div>
+            </div>
+            <div style="background: var(--cream-bg); padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Scheme & Rate</div>
+                <div style="font-size: 15px; font-weight: 600; color: var(--text-dark); margin-top: 4px;">
+                    {{ loan.loan_product.loan_name }} ({{ loan.interest_rate }}% {{ loan.loan_product.interest_method }})
+                </div>
+            </div>
+            <div style="background: var(--cream-bg); padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Status</div>
+                <div style="margin-top: 4px;">
+                    <span class="badge {% if loan.status == 'DISBURSED' %}badge-disbursed{% elif loan.status == 'APPROVED' %}badge-approved{% elif loan.status == 'PENDING' %}badge-pending{% else %}badge-inactive{% endif %}">
+                        {{ loan.status }}
+                    </span>
+                    {% if loan.approved_by %}
+                    <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">
+                        By {{ loan.approved_by.username }} on {{ loan.approved_at|date:"d M Y" }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Disbursement Panel if APPROVED -->
+        {% if loan.status == 'APPROVED' and can_disburse %}
+        <div style="background: #fdfaf3; border: 1px solid rgba(198, 155, 69, 0.4); border-radius: var(--radius-sm); padding: 20px; margin-bottom: 24px;">
+            <h4 style="font-size: 15px; color: var(--gold-dark); margin-bottom: 8px;">
+                ⚡ Disburse Loan to Member's Savings Account
+            </h4>
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">
+                Disbursing will credit ₹{{ loan.principal_amount }} to the member's active savings account, record a ledger disbursement transaction, and generate the complete monthly EMI repayment schedule.
+            </p>
+            <form method="POST" action="{% url 'loan_disburse' loan.pk %}" style="display: flex; gap: 14px; align-items: flex-end; max-width: 450px;">
+                {% csrf_token %}
+                <div style="flex: 1;">
+                    <label class="form-label">First Installment Due Date</label>
+                    {{ disbursement_form.first_due_date }}
+                </div>
+                <button type="submit" class="btn btn-primary" onclick="return confirm('Confirm disbursement of ₹{{ loan.principal_amount }}?')">
+                    Authorize Disbursement
+                </button>
+            </form>
+        </div>
+        {% endif %}
+
+        <!-- EMI Repayment Schedule Table -->
+        {% if repayments %}
+        <div style="margin-top: 24px;">
+            <h4 style="font-size: 15px; color: var(--primary); margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+                <span>Monthly EMI Repayment Schedule</span>
+                <button onclick="window.print()" class="btn btn-outline btn-sm">🖨 Print Schedule</button>
+            </h4>
+
+            <div class="table-responsive">
+                <table class="banking-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Due Date</th>
+                            <th>Principal Due</th>
+                            <th>Interest Due</th>
+                            <th>Total Due</th>
+                            <th>Paid Amount</th>
+                            <th>Status</th>
+                            <th>Collection</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in repayments %}
+                        <tr>
+                            <td><strong>{{ r.installment_number }}</strong></td>
+                            <td>{{ r.due_date|date:"d M Y" }}</td>
+                            <td>₹{{ r.principal_due|floatformat:2 }}</td>
+                            <td>₹{{ r.interest_due|floatformat:2 }}</td>
+                            <td><strong>₹{{ r.total_due|floatformat:2 }}</strong></td>
+                            <td><strong style="color: var(--emerald);">₹{{ r.amount_paid|floatformat:2 }}</strong></td>
+                            <td>
+                                {% if r.status == 'PAID' %}
+                                    <span class="badge badge-paid">PAID</span>
+                                {% elif r.status == 'PARTIAL' %}
+                                    <span class="badge badge-partial">PARTIAL</span>
+                                {% else %}
+                                    <span class="badge badge-pending">PENDING</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if r.status != 'PAID' and loan.status == 'DISBURSED' %}
+                                <a href="{% url 'loan_collect_payment' loan.pk r.pk %}" class="btn btn-gold btn-sm">
+                                    Collect EMI
+                                </a>
+                                {% else %}
+                                <span style="font-size: 12px; color: var(--text-muted);">Completed</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Payment Receipts History -->
+        {% if payments %}
+        <div style="margin-top: 30px;">
+            <h4 style="font-size: 15px; color: var(--primary); margin-bottom: 12px;">Payment Collection History</h4>
+            <div class="table-responsive">
+                <table class="banking-table">
+                    <thead>
+                        <tr>
+                            <th>Receipt No</th>
+                            <th>Date & Time</th>
+                            <th>Installment</th>
+                            <th>Amount Paid</th>
+                            <th>Payment Mode</th>
+                            <th>Collected By</th>
+                            <th>Receipt</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in payments %}
+                        <tr>
+                            <td><strong>{{ p.receipt_number }}</strong></td>
+                            <td>{{ p.payment_date|date:"d M Y, h:i A" }}</td>
+                            <td>EMI #{{ p.repayment.installment_number }}</td>
+                            <td><strong style="color: var(--emerald);">₹{{ p.amount|floatformat:2 }}</strong></td>
+                            <td>{{ p.get_payment_mode_display|default:p.payment_mode }}</td>
+                            <td>{{ p.received_by.get_full_name|default:p.received_by.username }}</td>
+                            <td>
+                                <a href="{% url 'loan_receipt' p.pk %}" class="btn btn-outline btn-sm">
+                                    View Receipt
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

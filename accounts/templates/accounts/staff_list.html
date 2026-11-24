@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block page_title %}Staff & Role-Based Access Control{% endblock %}
+
+{% block content %}
+<div class="card-panel">
+    <div class="card-header">
+        <div>
+            <h3>Society Staff & System Users</h3>
+            <p style="font-size: 12px; color: var(--text-muted); margin-top: 3px;">
+                Manage personnel access, branch assignments, and roles (Admin, Manager, Accountant).
+            </p>
+        </div>
+        <div>
+            <a href="{% url 'staff_create' %}" class="btn btn-primary">
+                ＋ Add New Staff
+            </a>
+        </div>
+    </div>
+    <div class="card-body" style="padding: 0;">
+        <div class="table-responsive">
+            <table class="banking-table">
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Full Name</th>
+                        <th>Assigned Role</th>
+                        <th>Branch Assignment</th>
+                        <th>Email</th>
+                        <th>Account Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for staff in staff_members %}
+                    <tr>
+                        <td><strong>{{ staff.user.username }}</strong></td>
+                        <td>{{ staff.user.get_full_name|default:"—" }}</td>
+                        <td>
+                            <span class="role-badge role-{{ staff.role }}">
+                                {{ staff.role }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if staff.branch %}
+                                {{ staff.branch.branch_name }} ({{ staff.branch.branch_code }})
+                            {% else %}
+                                <span style="color: var(--text-muted);">All Branches (Global)</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ staff.user.email|default:"—" }}</td>
+                        <td>
+                            {% if staff.user.is_active %}
+                                <span class="badge badge-active">Active</span>
+                            {% else %}
+                                <span class="badge badge-inactive">Disabled</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'staff_edit' staff.user.id %}" class="btn btn-outline btn-sm">
+                                ✎ Edit
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 30px; color: var(--text-muted);">
+                            No staff profiles registered yet.
+                        </td>
+                    </tr>
+                    {% endfor %}
+
+                    {% for su in superusers %}
+                    <tr>
+                        <td><strong>{{ su.username }}</strong></td>
+                        <td>{{ su.get_full_name|default:"—" }}</td>
+                        <td><span class="role-badge role-ADMIN">SUPERUSER</span></td>
+                        <td><span style="color: var(--text-muted);">All Branches (Root)</span></td>
+                        <td>{{ su.email|default:"—" }}</td>
+                        <td><span class="badge badge-active">Active</span></td>
+                        <td>
+                            <a href="{% url 'staff_edit' su.id %}" class="btn btn-outline btn-sm">
+                                ✎ Configure Profile
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

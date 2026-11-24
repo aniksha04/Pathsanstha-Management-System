@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block page_title %}{{ branch.branch_name }} Details{% endblock %}
+
+{% block content %}
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
+    <div>
+        <div class="card-panel">
+            <div class="card-header">
+                <div>
+                    <h3>{{ branch.branch_name }} ({{ branch.branch_code }})</h3>
+                    <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+                        Branch Code: {{ branch.branch_code }} • Contact: {{ branch.phone }}
+                    </p>
+                </div>
+                <div>
+                    {% if is_admin %}
+                    <a href="{% url 'branch_edit' branch.pk %}" class="btn btn-outline btn-sm">✎ Edit Branch</a>
+                    {% endif %}
+                    <a href="{% url 'branch_list' %}" class="btn btn-outline btn-sm">← Back</a>
+                </div>
+            </div>
+            <div class="card-body">
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 24px;">
+                    <div style="background: var(--cream-bg); padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                        <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Total Savings Balance</div>
+                        <div style="font-size: 20px; font-weight: 700; color: var(--primary); margin-top: 4px;">₹{{ total_deposits|floatformat:2 }}</div>
+                    </div>
+                    <div style="background: var(--cream-bg); padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                        <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Total Loan Portfolio</div>
+                        <div style="font-size: 20px; font-weight: 700; color: var(--primary); margin-top: 4px;">₹{{ total_loans|floatformat:2 }}</div>
+                    </div>
+                    <div style="background: var(--cream-bg); padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                        <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Outstanding Loans</div>
+                        <div style="font-size: 20px; font-weight: 700; color: var(--danger); margin-top: 4px;">₹{{ outstanding_loans|floatformat:2 }}</div>
+                    </div>
+                </div>
+
+                <h4 style="font-size: 14px; color: var(--primary); margin-bottom: 12px;">Recent Member Registrations</h4>
+                <div class="table-responsive">
+                    <table class="banking-table">
+                        <thead>
+                            <tr>
+                                <th>Member No</th>
+                                <th>Name</th>
+                                <th>Phone</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for m in recent_members %}
+                            <tr>
+                                <td><strong>{{ m.member_number }}</strong></td>
+                                <td>{{ m.full_name }}</td>
+                                <td>{{ m.phone }}</td>
+                                <td><span class="badge badge-active">{{ m.status }}</span></td>
+                                <td>
+                                    <a href="{% url 'member_detail' m.pk %}" class="btn btn-outline btn-sm">View Profile</a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 20px;">
+                                    No members registered in this branch yet.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div>
+        <div class="card-panel">
+            <div class="card-header">
+                <h3>Branch Information</h3>
+            </div>
+            <div class="card-body" style="font-size: 13.5px; line-height: 1.8;">
+                <div><strong>Address:</strong><br>{{ branch.address }}</div>
+                <div style="margin-top: 10px;"><strong>Phone:</strong> {{ branch.phone }}</div>
+                <div style="margin-top: 5px;"><strong>Email:</strong> {{ branch.email|default:"Not specified" }}</div>
+                <div style="margin-top: 5px;">
+                    <strong>Operational Status:</strong>
+                    {% if branch.is_active %}<span class="badge badge-active">Active</span>{% else %}<span class="badge badge-inactive">Inactive</span>{% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="card-panel">
+            <div class="card-header">
+                <h3>Assigned Branch Staff</h3>
+            </div>
+            <div class="card-body" style="padding: 0;">
+                <table class="banking-table">
+                    <tbody>
+                        {% for s in staff_members %}
+                        <tr>
+                            <td>
+                                <strong>{{ s.user.get_full_name|default:s.user.username }}</strong>
+                                <div style="font-size: 11px; color: var(--text-muted);">{{ s.user.email }}</div>
+                            </td>
+                            <td>
+                                <span class="role-badge role-{{ s.role }}">{{ s.role }}</span>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="2" style="text-align: center; color: var(--text-muted); padding: 16px;">
+                                No staff assigned to this branch.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

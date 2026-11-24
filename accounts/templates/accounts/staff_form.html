@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div style="max-width: 650px; margin: 0 auto;">
+    <div class="card-panel">
+        <div class="card-header">
+            <h3>{{ title }}</h3>
+            <a href="{% url 'staff_list' %}" class="btn btn-outline btn-sm">← Back to Staff List</a>
+        </div>
+        <div class="card-body">
+            <form method="POST">
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                <div class="alert-box error">
+                    {{ form.non_field_errors }}
+                </div>
+                {% endif %}
+
+                {% if not is_edit %}
+                <div class="form-group">
+                    <label class="form-label">Username</label>
+                    {{ form.username }}
+                    {{ form.username.errors }}
+                </div>
+                {% endif %}
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                    <div class="form-group">
+                        <label class="form-label">First Name</label>
+                        {{ form.first_name }}
+                        {{ form.first_name.errors }}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Last Name</label>
+                        {{ form.last_name }}
+                        {{ form.last_name.errors }}
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Email Address</label>
+                    {{ form.email }}
+                    {{ form.email.errors }}
+                </div>
+
+                {% if not is_edit %}
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    {{ form.password }}
+                    {{ form.password.errors }}
+                </div>
+                {% endif %}
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                    <div class="form-group">
+                        <label class="form-label">Staff Role</label>
+                        {{ form.role }}
+                        {{ form.role.errors }}
+                        <div class="form-text">Admin has global access. Manager & Accountant are branch-scoped.</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Branch Assignment</label>
+                        {{ form.branch }}
+                        {{ form.branch.errors }}
+                        <div class="form-text">Required for Manager and Accountant.</div>
+                    </div>
+                </div>
+
+                {% if is_edit %}
+                <div class="form-group" style="display: flex; align-items: center; gap: 8px; margin-top: 10px;">
+                    {{ form.is_active }}
+                    <label class="form-label" style="margin-bottom: 0;">Account is Active and allowed to sign in</label>
+                </div>
+                {% endif %}
+
+                <div style="margin-top: 24px; display: flex; gap: 12px;">
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">
+                        Save Staff Account
+                    </button>
+                    <a href="{% url 'staff_list' %}" class="btn btn-outline">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

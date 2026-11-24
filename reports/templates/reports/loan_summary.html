@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block page_title %}Society Loan Reports & Portfolio Analytics{% endblock %}
+
+{% block content %}
+<div class="card-panel">
+    <div class="card-header">
+        <div>
+            <h3>Cooperative Credit Portfolio Summary</h3>
+            <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+                Comprehensive analytics of loan disbursement, repayment rates, and status.
+            </p>
+        </div>
+        <div>
+            <a href="{% url 'loan_list' %}" class="btn btn-primary btn-sm">Manage All Loans</a>
+            <button onclick="window.print()" class="btn btn-outline btn-sm">🖨 Print Report</button>
+        </div>
+    </div>
+    <div class="card-body">
+        <!-- 6 Metrics Cards -->
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px;">
+            <div style="background: var(--cream-bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 18px;">
+                <div style="font-size: 11.5px; color: var(--text-muted); text-transform: uppercase;">Total Principal Disbursed</div>
+                <div style="font-size: 24px; font-weight: 800; color: var(--primary); margin-top: 4px;">
+                    ₹{{ total_principal|floatformat:2 }}
+                </div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">{{ total_loans }} Total Loan Accounts</div>
+            </div>
+
+            <div style="background: var(--cream-bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 18px;">
+                <div style="font-size: 11.5px; color: var(--text-muted); text-transform: uppercase;">Outstanding Portfolio Debt</div>
+                <div style="font-size: 24px; font-weight: 800; color: var(--danger); margin-top: 4px;">
+                    ₹{{ total_outstanding|floatformat:2 }}
+                </div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Active principal awaiting collection</div>
+            </div>
+
+            <div style="background: var(--cream-bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 18px;">
+                <div style="font-size: 11.5px; color: var(--text-muted); text-transform: uppercase;">Overdue Installments</div>
+                <div style="font-size: 24px; font-weight: 800; color: var(--warning); margin-top: 4px;">
+                    {{ overdue_count }}
+                </div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">EMIs past due date</div>
+            </div>
+        </div>
+
+        <!-- Status Breakdown Cards -->
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 28px;">
+            <div style="background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px; text-align: center;">
+                <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Pending Approval</div>
+                <div style="font-size: 20px; font-weight: 700; color: var(--gold-dark); margin-top: 4px;">{{ pending_loans }}</div>
+            </div>
+            <div style="background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px; text-align: center;">
+                <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Approved (Ready)</div>
+                <div style="font-size: 20px; font-weight: 700; color: var(--emerald); margin-top: 4px;">{{ approved_loans }}</div>
+            </div>
+            <div style="background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px; text-align: center;">
+                <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Disbursed & Active</div>
+                <div style="font-size: 20px; font-weight: 700; color: var(--primary); margin-top: 4px;">{{ disbursed_loans }}</div>
+            </div>
+            <div style="background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px; text-align: center;">
+                <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Fully Closed</div>
+                <div style="font-size: 20px; font-weight: 700; color: #5e7368; margin-top: 4px;">{{ closed_loans }}</div>
+            </div>
+        </div>
+
+        <!-- Products Summary Breakdown -->
+        <h4 style="font-size: 15px; color: var(--primary); margin-bottom: 12px;">Performance by Loan Scheme</h4>
+        <div class="table-responsive">
+            <table class="banking-table">
+                <thead>
+                    <tr>
+                        <th>Loan Scheme</th>
+                        <th>Interest Method</th>
+                        <th>Annual Rate</th>
+                        <th>Tenure Range</th>
+                        <th>Total Borrowers</th>
+                        <th>Total Sanctioned Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in product_summary %}
+                    <tr>
+                        <td><strong>{{ p.loan_name }}</strong></td>
+                        <td>{{ p.get_interest_method_display|default:p.interest_method }}</td>
+                        <td>{{ p.interest_rate }}%</td>
+                        <td>Up to {{ p.max_tenure_months }} Months</td>
+                        <td><strong>{{ p.count }}</strong></td>
+                        <td><strong style="color: var(--primary);">₹{{ p.total_amount|default:0|floatformat:2 }}</strong></td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 20px;">
+                            No loan products configured.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

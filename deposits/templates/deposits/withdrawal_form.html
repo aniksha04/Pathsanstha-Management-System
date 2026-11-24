@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block page_title %}Withdrawal Money{% endblock %}
+
+{% block content %}
+<div style="max-width: 650px; margin: 0 auto;">
+    <div class="card-panel">
+        <div class="card-header">
+            <div>
+                <h3>Withdrawal Money</h3>
+                <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+                    Debit cash withdrawal from member's active savings account.
+                </p>
+            </div>
+            <a href="{% url 'account_list' %}" class="btn btn-outline btn-sm">← Back to Accounts</a>
+        </div>
+        <div class="card-body">
+            <form method="POST">
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                <div class="alert-box error">{{ form.non_field_errors }}</div>
+                {% endif %}
+
+                <div class="form-group">
+                    <label class="form-label">Select Active Account</label>
+                    {{ form.account }}
+                    {{ form.account.errors }}
+                    <div class="form-text">Choose member's savings account</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Withdrawal Amount (₹)</label>
+                    {{ form.amount }}
+                    {{ form.amount.errors }}
+                    <div class="form-text">Cannot exceed current balance</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Transaction Notes / Narration</label>
+                    {{ form.description }}
+                    {{ form.description.errors }}
+                </div>
+
+                <div style="margin-top: 24px; display: flex; gap: 12px;">
+                    <button type="submit" class="btn btn-danger" style="flex: 1;">
+                        Authorize Cash Withdrawal
+                    </button>
+                    <a href="{% url 'account_list' %}" class="btn btn-outline">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

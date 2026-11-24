@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block page_title %}Society Ledger & Transactions{% endblock %}
+
+{% block content %}
+<div class="card-panel">
+    <div class="card-header">
+        <div>
+            <h3>All Society Transactions</h3>
+            <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+                Complete audit trail of deposits, withdrawals, disbursements, and loan repayments.
+            </p>
+        </div>
+        <div>
+            <a href="{% url 'deposit_create' %}" class="btn btn-primary btn-sm">＋ Deposit</a>
+            <a href="{% url 'withdrawal_create' %}" class="btn btn-outline btn-sm">↗ Withdraw</a>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div style="padding: 16px 20px; background: #fafcfb; border-bottom: 1px solid var(--border);">
+        <form method="GET" style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
+            <div style="flex: 2; min-width: 200px;">
+                <input type="text" name="q" value="{{ search_query }}" placeholder="Search by Txn ID, Account, Member..." class="form-control" style="padding: 8px 12px;">
+            </div>
+
+            <div style="flex: 1; min-width: 140px;">
+                <select name="type" class="form-control" style="padding: 8px 12px;">
+                    <option value="">All Types</option>
+                    {% for val, label in transaction_types %}
+                    <option value="{{ val }}" {% if type_filter == val %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div style="flex: 1; min-width: 130px;">
+                <input type="date" name="date_from" value="{{ date_from }}" class="form-control" style="padding: 8px 12px;" title="From Date">
+            </div>
+
+            <div style="flex: 1; min-width: 130px;">
+                <input type="date" name="date_to" value="{{ date_to }}" class="form-control" style="padding: 8px 12px;" title="To Date">
+            </div>
+
+            <div>
+                <button type="submit" class="btn btn-primary">Filter</button>
+                {% if search_query or type_filter or date_from or date_to %}
+                <a href="{% url 'transaction_list' %}" class="btn btn-outline">Clear</a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    <div class="card-body" style="padding: 0;">
+        <div class="table-responsive">
+            <table class="banking-table">
+                <thead>
+                    <tr>
+                        <th>Transaction ID</th>
+                        <th>Date & Time</th>
+                        <th>Type</th>
+                        <th>Account / Loan</th>
+                        <th>Member</th>
+                        <th>Handled By</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Receipt</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for t in transactions %}
+                    <tr>
+                        <td><strong>{{ t.transaction_number }}</strong></td>
+                        <td>{{ t.created_at|date:"d-m-Y H:i" }}</td>
+                        <td>
+                            <span class="transaction-type {% if t.transaction_type == 'WITHDRAWAL' %}style='color: var(--danger);'{% endif %}">
+                                {{ t.get_transaction_type_display|default:t.transaction_type }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if t.account %}
+                                <a href="{% url 'account_detail' t.account.pk %}" style="color: var(--primary); text-decoration: none;">
+                                    {{ t.account.account_number }}
+                                </a>
+                            {% elif t.loan_payment %}
+                                <a href="{% url 'loan_detail' t.loan_payment.loan.pk %}" style="color: var(--primary); text-decoration: none;">
+                                    {{ t.loan_payment.loan.loan_number }}
+                                </a>
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if t.account %}
+                                {{ t.account.member.full_name }}
+                            {% elif t.loan_payment %}
+                                {{ t.loan_payment.loan.member.full_name }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+                        <td>{{ t.created_by.get_full_name|default:t.created_by.username }}</td>
+                        <td>
+                            {% if t.transaction_type == 'DEPOSIT' or t.transaction_type == 'LOAN_REPAYMENT' %}
+                                <strong style="color: var(--emerald);">₹{{ t.amount|floatformat:2 }}</strong>
+                            {% elif t.transaction_type == 'WITHDRAWAL' or t.transaction_type == 'LOAN_DISBURSEMENT' %}
+                                <strong style="color: var(--danger);">₹{{ t.amount|floatformat:2 }}</strong>
+                            {% else %}
+                                <strong>₹{{ t.amount|floatformat:2 }}</strong>
+                            {% endif %}
+                        </td>
+                        <td><span class="badge badge-active">{{ t.status }}</span></td>
+                        <td>
+                            <a href="{% url 'transaction_detail' t.pk %}" class="btn btn-outline btn-sm">
+                                Voucher
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" style="text-align: center; padding: 36px; color: var(--text-muted);">
+                            No transactions found matching your criteria.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

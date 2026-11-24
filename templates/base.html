@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Pathsanstha Management System{% endblock %}</title>
+    
+    <style>
+        :root {
+            --primary: #104936;
+            --primary-hover: #0c3829;
+            --emerald: #176b50;
+            --emerald-light: #e8f5ef;
+            --emerald-border: #c3e2d3;
+            --gold: #c69b45;
+            --gold-light: #fbf5e8;
+            --gold-dark: #96722a;
+            --cream-bg: #f6f8f6;
+            --white: #ffffff;
+            --text-dark: #1a2c24;
+            --text-muted: #647b71;
+            --border: #e2ece6;
+            --border-subtle: #edf3f0;
+            --danger: #be3a3a;
+            --danger-light: #fdf0f0;
+            --success: #176b50;
+            --success-light: #e8f5ef;
+            --warning: #b38118;
+            --warning-light: #fef8ec;
+            --sidebar-width: 260px;
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 14px;
+            --shadow-sm: 0 1px 3px rgba(16, 73, 54, 0.05);
+            --shadow-md: 0 4px 14px rgba(16, 73, 54, 0.07);
+            --shadow-lg: 0 10px 25px rgba(16, 73, 54, 0.10);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: var(--cream-bg);
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            line-height: 1.5;
+        }
+
+        /* Sidebar Styling */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--primary);
+            color: #d8e8e0;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            z-index: 100;
+            overflow-y: auto;
+            border-right: 1px solid rgba(198, 155, 69, 0.25);
+            transition: transform 0.25s ease;
+        }
+
+        .brand-header {
+            padding: 22px 20px 18px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, transparent 100%);
+        }
+
+        .brand-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: var(--white);
+        }
+
+        .brand-logo-icon {
+            width: 34px;
+            height: 34px;
+            background: var(--gold);
+            color: var(--primary);
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 18px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .brand-text h2 {
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--white);
+            letter-spacing: 0.3px;
+        }
+
+        .brand-text p {
+            font-size: 11px;
+            color: #9cb8ab;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        .sidebar-nav {
+            padding: 16px 12px 30px;
+            flex: 1;
+        }
+
+        .nav-category {
+            font-size: 10.5px;
+            font-weight: 700;
+            color: #7fa694;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            padding: 18px 12px 6px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            padding: 10px 14px;
+            border-radius: var(--radius-sm);
+            color: #d1e2da;
+            text-decoration: none;
+            font-size: 13.5px;
+            font-weight: 500;
+            margin-bottom: 3px;
+            transition: all 0.15s ease;
+        }
+
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--white);
+        }
+
+        .nav-link.active {
+            background: rgba(23, 107, 80, 0.7);
+            color: var(--white);
+            font-weight: 600;
+            border-left: 3px solid var(--gold);
+        }
+
+        .nav-icon {
+            font-size: 15px;
+            width: 18px;
+            text-align: center;
+            opacity: 0.9;
+        }
+
+        .sidebar-user {
+            padding: 16px;
+            background: rgba(0, 0, 0, 0.2);
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            font-size: 12px;
+        }
+
+        .sidebar-user-name {
+            color: var(--white);
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .sidebar-user-branch {
+            color: #a3c4b4;
+            margin-top: 2px;
+            font-size: 11.5px;
+        }
+
+        /* Main Workspace Layout */
+        .workspace {
+            margin-left: var(--sidebar-width);
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            min-height: 100vh;
+        }
+
+        /* Top Navigation Bar */
+        .topbar {
+            background: var(--white);
+            border-bottom: 1px solid var(--border);
+            padding: 14px 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 90;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            background: transparent;
+            border: 1px solid var(--border);
+            padding: 7px 11px;
+            border-radius: var(--radius-sm);
+            color: var(--primary);
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .page-header-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .role-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+        }
+
+        .role-ADMIN {
+            background: var(--gold-light);
+            color: var(--gold-dark);
+            border: 1px solid rgba(198, 155, 69, 0.35);
+        }
+
+        .role-MANAGER {
+            background: var(--emerald-light);
+            color: var(--emerald);
+            border: 1px solid var(--emerald-border);
+        }
+
+        .role-ACCOUNTANT {
+            background: #eef2f8;
+            color: #2b5797;
+            border: 1px solid #c9d8ee;
+        }
+
+        .branch-badge {
+            display: inline-flex;
+            align-items: center;
+            background: var(--cream-bg);
+            border: 1px solid var(--border);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            color: var(--text-dark);
+            font-weight: 500;
+        }
+
+        .btn-logout {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 6px 12px;
+            border-radius: var(--radius-sm);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.15s ease;
+        }
+
+        .btn-logout:hover {
+            background: var(--danger-light);
+            color: var(--danger);
+            border-color: rgba(190, 58, 58, 0.2);
+        }
+
+        /* Content Area */
+        .page-content {
+            padding: 28px;
+            flex: 1;
+            max-width: 1400px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        /* Alert / Messages */
+        .alerts-wrapper {
+            margin-bottom: 20px;
+        }
+
+        .alert-box {
+            padding: 12px 18px;
+            border-radius: var(--radius-sm);
+            margin-bottom: 10px;
+            font-size: 13.5px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-left: 4px solid;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .alert-box.success {
+            background: var(--success-light);
+            color: var(--success);
+            border-color: var(--success);
+        }
+
+        .alert-box.error {
+            background: var(--danger-light);
+            color: var(--danger);
+            border-color: var(--danger);
+        }
+
+        .alert-box.warning {
+            background: var(--warning-light);
+            color: var(--warning);
+            border-color: var(--warning);
+        }
+
+        .alert-box.info {
+            background: #eef5fc;
+            color: #1e5a96;
+            border-color: #2b74ba;
+        }
+
+        /* Cards & Components */
+        .card-panel {
+            background: var(--white);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--white);
+        }
+
+        .card-header h3 {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .card-body {
+            padding: 20px;
+        }
+
+        /* Tables */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .banking-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13.5px;
+            text-align: left;
+        }
+
+        .banking-table th {
+            background: #f0f6f3;
+            color: var(--primary);
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+        }
+
+        .banking-table td {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border-subtle);
+            color: var(--text-dark);
+            vertical-align: middle;
+        }
+
+        .banking-table tbody tr:hover {
+            background: #fafdfb;
+        }
+
+        .banking-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Status Badges */
+        .badge {
+            display: inline-block;
+            padding: 3px 9px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .badge-active, .badge-posted, .badge-paid, .badge-approved, .badge-disbursed {
+            background: var(--emerald-light);
+            color: var(--emerald);
+        }
+
+        .badge-pending, .badge-partial {
+            background: var(--warning-light);
+            color: var(--warning);
+        }
+
+        .badge-inactive, .badge-closed, .badge-rejected, .badge-suspended {
+            background: var(--danger-light);
+            color: var(--danger);
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 8px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: var(--radius-sm);
+            text-decoration: none;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: all 0.15s ease;
+        }
+
+        .btn-primary {
+            background: var(--emerald);
+            color: var(--white);
+            border-color: var(--emerald);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .btn-gold {
+            background: var(--gold);
+            color: var(--white);
+            border-color: var(--gold);
+        }
+
+        .btn-gold:hover {
+            background: var(--gold-dark);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border-color: var(--border);
+            color: var(--text-dark);
+        }
+
+        .btn-outline:hover {
+            background: #f0f5f2;
+            border-color: var(--emerald);
+            color: var(--emerald);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: var(--white);
+        }
+
+        .btn-sm {
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 12.5px;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 6px;
+        }
+
+        .form-control, input[type="text"], input[type="number"], input[type="email"], input[type="password"], input[type="date"], select, textarea {
+            width: 100%;
+            padding: 9px 12px;
+            border: 1px solid #c9d8d0;
+            border-radius: var(--radius-sm);
+            font-size: 13.5px;
+            font-family: inherit;
+            color: var(--text-dark);
+            background: var(--white);
+            outline: none;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .form-control:focus, input:focus, select:focus, textarea:focus {
+            border-color: var(--emerald);
+            box-shadow: 0 0 0 3px rgba(23, 107, 80, 0.12);
+        }
+
+        .form-text {
+            font-size: 11.5px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .errorlist {
+            list-style: none;
+            color: var(--danger);
+            font-size: 12px;
+            margin-top: 4px;
+            padding-left: 0;
+        }
+
+        /* App Footer */
+        .app-footer {
+            margin-top: auto;
+            border-top: 1px solid var(--border);
+            background: var(--white);
+            padding: 14px 28px;
+            font-size: 12px;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        /* Responsive Breakpoints */
+        @media (max-width: 900px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            .workspace {
+                margin-left: 0;
+            }
+            .mobile-menu-btn {
+                display: block;
+            }
+            .topbar {
+                padding: 12px 16px;
+            }
+            .page-content {
+                padding: 18px 14px;
+            }
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+    <!-- Professional Banking Sidebar -->
+    <aside class="sidebar" id="appSidebar">
+        <div class="brand-header">
+            <a href="{% url 'dashboard' %}" class="brand-title">
+                <div class="brand-logo-icon">✦</div>
+                <div class="brand-text">
+                    <h2>Pathsanstha</h2>
+                    <p>Credit Society ERP</p>
+                </div>
+            </a>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-category">Core Operations</div>
+            <a href="{% url 'dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                <span class="nav-icon">▦</span>
+                <span>Dashboard</span>
+            </a>
+
+            <div class="nav-category">Member & Accounts</div>
+            <a href="{% url 'member_list' %}" class="nav-link {% if 'member' in request.resolver_match.url_name %}active{% endif %}">
+                <span class="nav-icon">♙</span>
+                <span>Members Directory</span>
+            </a>
+            {% if can_manage_members %}
+            <a href="{% url 'member_register' %}" class="nav-link {% if request.resolver_match.url_name == 'member_register' %}active{% endif %}">
+                <span class="nav-icon">＋</span>
+                <span>New Member</span>
+            </a>
+            {% endif %}
+            <a href="{% url 'account_list' %}" class="nav-link {% if 'account' in request.resolver_match.url_name and 'staff' not in request.resolver_match.url_name %}active{% endif %}">
+                <span class="nav-icon">▣</span>
+                <span>Savings Accounts</span>
+            </a>
+            {% if is_manager %}
+            <a href="{% url 'account_create' %}" class="nav-link {% if request.resolver_match.url_name == 'account_create' %}active{% endif %}">
+                <span class="nav-icon">✦</span>
+                <span>Open New Account</span>
+            </a>
+            {% endif %}
+
+            <div class="nav-category">Transactions</div>
+            <a href="{% url 'deposit_create' %}" class="nav-link {% if request.resolver_match.url_name == 'deposit_create' %}active{% endif %}">
+                <span class="nav-icon">↓</span>
+                <span>Deposit Money</span>
+            </a>
+            <a href="{% url 'withdrawal_create' %}" class="nav-link {% if request.resolver_match.url_name == 'withdrawal_create' %}active{% endif %}">
+                <span class="nav-icon">↑</span>
+                <span>Withdrawal Money</span>
+            </a>
+            <a href="{% url 'transaction_list' %}" class="nav-link {% if request.resolver_match.url_name == 'transaction_list' %}active{% endif %}">
+                <span class="nav-icon">⇄</span>
+                <span>Transaction History</span>
+            </a>
+
+            <div class="nav-category">Loans & Credit</div>
+            <a href="{% url 'loan_list' %}" class="nav-link {% if 'loan' in request.resolver_match.url_name and request.resolver_match.url_name != 'loan_summary' %}active{% endif %}">
+                <span class="nav-icon">₹</span>
+                <span>Loan Management</span>
+            </a>
+            <a href="{% url 'loan_apply' %}" class="nav-link {% if request.resolver_match.url_name == 'loan_apply' %}active{% endif %}">
+                <span class="nav-icon">📝</span>
+                <span>Apply for Loan</span>
+            </a>
+
+            <div class="nav-category">Reports & Admin</div>
+            <a href="{% url 'loan_summary' %}" class="nav-link {% if request.resolver_match.url_name == 'loan_summary' %}active{% endif %}">
+                <span class="nav-icon">📊</span>
+                <span>Financial Reports</span>
+            </a>
+            <a href="{% url 'branch_list' %}" class="nav-link {% if 'branch' in request.resolver_match.url_name %}active{% endif %}">
+                <span class="nav-icon">🏛</span>
+                <span>Branch Network</span>
+            </a>
+            {% if is_admin %}
+            <a href="{% url 'staff_list' %}" class="nav-link {% if 'staff' in request.resolver_match.url_name %}active{% endif %}">
+                <span class="nav-icon">👥</span>
+                <span>Staff & Access</span>
+            </a>
+            <a href="{% url 'admin:index' %}" class="nav-link" target="_blank">
+                <span class="nav-icon">⚙</span>
+                <span>Django Admin ↗</span>
+            </a>
+            {% endif %}
+        </nav>
+
+        <div class="sidebar-user">
+            <div class="sidebar-user-name">{{ request.user.get_full_name|default:request.user.username }}</div>
+            <div class="sidebar-user-branch">
+                {% if is_admin %}
+                    All Branches Access
+                {% elif user_branch %}
+                    {{ user_branch.branch_name }}
+                {% else %}
+                    No Branch Assigned
+                {% endif %}
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="workspace">
+        <header class="topbar">
+            <div class="topbar-left">
+                <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle Navigation">☰</button>
+                <div class="page-header-title">
+                    {% block page_title %}Dashboard{% endblock %}
+                </div>
+            </div>
+
+            <div class="topbar-right">
+                <span class="branch-badge">
+                    🏛 {% if is_admin %}All Branches{% elif user_branch %}{{ user_branch.branch_name }}{% else %}Unassigned{% endif %}
+                </span>
+                
+                <span class="role-badge role-{{ user_role|default:'STAFF' }}">
+                    ● {{ user_role|default:'STAFF' }}
+                </span>
+
+                <form method="POST" action="{% url 'logout' %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-logout" title="Sign out of system">
+                        Sign Out
+                    </button>
+                </form>
+            </div>
+        </header>
+
+        <main class="page-content">
+            {% if messages %}
+            <div class="alerts-wrapper">
+                {% for message in messages %}
+                <div class="alert-box {{ message.tags|default:'info' }}">
+                    <span>{{ message }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% block content %}{% endblock %}
+        </main>
+
+        <footer class="app-footer">
+            <div>© 2026 Pathsanstha Cooperative Credit Society Ltd. All rights reserved.</div>
+            <div>Secure Banking Architecture • Verified Integrity</div>
+        </footer>
+    </div>
+
+    <script>
+        // Toggle mobile navigation
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const sidebar = document.getElementById('appSidebar');
+        if (mobileMenuBtn && sidebar) {
+            mobileMenuBtn.addEventListener('click', function() {
+                sidebar.classList.toggle('open');
+            });
+        }
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

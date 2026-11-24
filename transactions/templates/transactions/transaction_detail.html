@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block page_title %}Transaction Voucher #{{ transaction.transaction_number }}{% endblock %}
+
+{% block content %}
+<div style="max-width: 680px; margin: 0 auto;">
+    <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
+        <a href="{% url 'transaction_list' %}" class="btn btn-outline btn-sm">← Back to Ledger</a>
+        <button onclick="window.print()" class="btn btn-primary btn-sm">🖨 Print Official Voucher</button>
+    </div>
+
+    <!-- Official Bank Receipt Slip -->
+    <div class="card-panel" style="padding: 32px; border: 2px solid var(--border);">
+        <div style="text-align: center; border-bottom: 2px solid var(--primary); padding-bottom: 18px; margin-bottom: 22px;">
+            <div style="font-size: 20px; font-weight: 800; color: var(--primary); letter-spacing: 0.5px;">
+                ✦ PATHSANSTHA CO-OPERATIVE CREDIT SOCIETY LTD.
+            </div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
+                {% if transaction.account and transaction.account.branch %}
+                    {{ transaction.account.branch.branch_name }} • {{ transaction.account.branch.address }}
+                {% elif transaction.loan_payment and transaction.loan_payment.loan.branch %}
+                    {{ transaction.loan_payment.loan.branch.branch_name }} • {{ transaction.loan_payment.loan.branch.address }}
+                {% else %}
+                    Central Banking Office
+                {% endif %}
+            </div>
+            <div style="display: inline-block; margin-top: 10px; background: var(--emerald-light); color: var(--emerald); font-weight: 700; font-size: 12px; padding: 4px 14px; border-radius: 20px; letter-spacing: 1px; text-transform: uppercase;">
+                OFFICIAL TRANSACTION VOUCHER
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; font-size: 13.5px; margin-bottom: 22px;">
+            <div>
+                <span style="color: var(--text-muted);">Voucher No:</span><br>
+                <strong style="font-size: 15px; color: var(--primary);">{{ transaction.transaction_number }}</strong>
+            </div>
+            <div style="text-align: right;">
+                <span style="color: var(--text-muted);">Date & Time:</span><br>
+                <strong>{{ transaction.created_at|date:"d M Y, h:i A" }}</strong>
+            </div>
+        </div>
+
+        <div style="background: var(--cream-bg); border-radius: var(--radius-sm); padding: 16px; border: 1px solid var(--border); margin-bottom: 22px; font-size: 13.5px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div>
+                    <span style="color: var(--text-muted);">Transaction Type:</span><br>
+                    <strong>{{ transaction.get_transaction_type_display|default:transaction.transaction_type }}</strong>
+                </div>
+                <div>
+                    <span style="color: var(--text-muted);">Status:</span><br>
+                    <span class="badge badge-active">{{ transaction.status }}</span>
+                </div>
+                <div>
+                    <span style="color: var(--text-muted);">Beneficiary / Member:</span><br>
+                    <strong>
+                        {% if transaction.account %}
+                            {{ transaction.account.member.full_name }} ({{ transaction.account.member.member_number }})
+                        {% elif transaction.loan_payment %}
+                            {{ transaction.loan_payment.loan.member.full_name }} ({{ transaction.loan_payment.loan.member.member_number }})
+                        {% else %}
+                            —
+                        {% endif %}
+                    </strong>
+                </div>
+                <div>
+                    <span style="color: var(--text-muted);">Account / Loan Ref:</span><br>
+                    <strong>
+                        {% if transaction.account %}
+                            {{ transaction.account.account_number }} ({{ transaction.account.account_type.name }})
+                        {% elif transaction.loan_payment %}
+                            {{ transaction.loan_payment.loan.loan_number }} (EMI Receipt: {{ transaction.loan_payment.receipt_number }})
+                        {% else %}
+                            —
+                        {% endif %}
+                    </strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- Amount Box -->
+        <div style="background: #f0f6f3; border: 1px dashed var(--emerald); border-radius: var(--radius-sm); padding: 18px; text-align: center; margin-bottom: 22px;">
+            <div style="font-size: 12px; color: var(--text-muted); text-transform: uppercase;">Amount Processed</div>
+            <div style="font-size: 32px; font-weight: 800; color: var(--primary); margin: 4px 0;">
+                ₹{{ transaction.amount|floatformat:2 }}
+            </div>
+            <div style="font-size: 12px; color: var(--text-muted);">
+                Narration: {{ transaction.description|default:"Standard Society Financial Transaction" }}
+            </div>
+        </div>
+
+        <!-- Signatures Block -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 50px; font-size: 12px; text-align: center;">
+            <div style="border-top: 1px solid #aaa; padding-top: 8px;">
+                Authorized Cashier / Officer<br>
+                <strong>{{ transaction.created_by.get_full_name|default:transaction.created_by.username }}</strong>
+            </div>
+            <div style="border-top: 1px solid #aaa; padding-top: 8px;">
+                Member / Beneficiary Signature<br>
+                <span>Verified Account Holder</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

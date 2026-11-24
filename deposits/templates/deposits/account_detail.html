@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block page_title %}Account Ledger: {{ account.account_number }}{% endblock %}
+
+{% block content %}
+<div class="card-panel">
+    <div class="card-header" style="flex-wrap: wrap; gap: 12px;">
+        <div>
+            <h3>Account {{ account.account_number }}</h3>
+            <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+                Holder: <strong>{{ account.member.full_name }}</strong> ({{ account.member.member_number }}) • 
+                Branch: <strong>{{ account.branch.branch_name }}</strong> • 
+                Opened: {{ account.opened_at|date:"d M Y" }}
+            </p>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <a href="{% url 'deposit_create' %}?account={{ account.pk }}" class="btn btn-primary btn-sm">＋ Deposit</a>
+            <a href="{% url 'withdrawal_create' %}?account={{ account.pk }}" class="btn btn-outline btn-sm">↗ Withdraw</a>
+            
+            {% if is_manager %}
+            <form method="POST" action="{% url 'account_toggle_status' account.pk %}" style="display: inline-flex; align-items: center; gap: 6px;">
+                {% csrf_token %}
+                <select name="status" onchange="this.form.submit()" class="form-control" style="padding: 4px 8px; font-size: 12px; width: auto;">
+                    <option value="ACTIVE" {% if account.status == 'ACTIVE' %}selected{% endif %}>Active</option>
+                    <option value="FROZEN" {% if account.status == 'FROZEN' %}selected{% endif %}>Frozen</option>
+                    <option value="CLOSED" {% if account.status == 'CLOSED' %}selected{% endif %}>Closed</option>
+                </select>
+            </form>
+            {% endif %}
+            
+            <a href="{% url 'account_list' %}" class="btn btn-outline btn-sm">← Back</a>
+        </div>
+    </div>
+    <div class="card-body">
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px;">
+            <div style="background: var(--cream-bg); padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Current Balance</div>
+                <div style="font-size: 22px; font-weight: 700; color: var(--primary); margin-top: 4px;">
+                    ₹{{ account.current_balance|floatformat:2 }}
+                </div>
+            </div>
+            <div style="background: var(--cream-bg); padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Account Type</div>
+                <div style="font-size: 16px; font-weight: 600; color: var(--text-dark); margin-top: 6px;">
+                    {{ account.account_type.get_name_display|default:account.account_type.name }}
+                </div>
+            </div>
+            <div style="background: var(--cream-bg); padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Interest Rate</div>
+                <div style="font-size: 16px; font-weight: 600; color: var(--text-dark); margin-top: 6px;">
+                    {{ account.account_type.interest_rate }}% p.a.
+                </div>
+            </div>
+            <div style="background: var(--cream-bg); padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Account Status</div>
+                <div style="margin-top: 6px;">
+                    <span class="badge {% if account.status == 'ACTIVE' %}badge-active{% elif account.status == 'FROZEN' %}badge-pending{% else %}badge-inactive{% endif %}">
+                        {{ account.status }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <h4 style="font-size: 15px; color: var(--primary); margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+            <span>Statement & Transaction Ledger</span>
+            <button onclick="window.print()" class="btn btn-outline btn-sm">🖨 Print Statement</button>
+        </h4>
+
+        <div class="table-responsive">
+            <table class="banking-table">
+                <thead>
+                    <tr>
+                        <th>Transaction ID</th>
+                        <th>Date & Time</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                        <th>Handled By</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Receipt</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for txn in transactions %}
+                    <tr>
+                        <td><strong>{{ txn.transaction_number }}</strong></td>
+                        <td>{{ txn.created_at|date:"d-m-Y H:i" }}</td>
+                        <td>
+                            <span class="transaction-type {% if txn.transaction_type == 'WITHDRAWAL' %}style='color: var(--danger);'{% endif %}">
+                                {{ txn.get_transaction_type_display|default:txn.transaction_type }}
+                            </span>
+                        </td>
+                        <td>{{ txn.description|default:"—" }}</td>
+                        <td>{{ txn.created_by.get_full_name|default:txn.created_by.username }}</td>
+                        <td>
+                            {% if txn.transaction_type == 'DEPOSIT' or txn.transaction_type == 'LOAN_DISBURSEMENT' %}
+                                <strong style="color: var(--emerald);">+₹{{ txn.amount|floatformat:2 }}</strong>
+                            {% else %}
+                                <strong style="color: var(--danger);">-₹{{ txn.amount|floatformat:2 }}</strong>
+                            {% endif %}
+                        </td>
+                        <td><span class="badge badge-active">{{ txn.status }}</span></td>
+                        <td>
+                            <a href="{% url 'transaction_detail' txn.pk %}" class="btn btn-outline btn-sm">
+                                Voucher
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" style="text-align: center; padding: 28px; color: var(--text-muted);">
+                            No transactions recorded on this account yet.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

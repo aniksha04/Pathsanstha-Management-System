@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block page_title %}Edit Member: {{ member.full_name }}{% endblock %}
+
+{% block content %}
+<div style="max-width: 750px; margin: 0 auto;">
+    <div class="card-panel">
+        <div class="card-header">
+            <div>
+                <h3>Edit Member: {{ member.full_name }}</h3>
+                <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+                    Member ID: {{ member.member_number }} • Joined {{ member.joined_date|date:"d M Y" }}
+                </p>
+            </div>
+            <a href="{% url 'member_detail' member.pk %}" class="btn btn-outline btn-sm">← Back to Profile</a>
+        </div>
+        <div class="card-body">
+            <form method="POST">
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                <div class="alert-box error">{{ form.non_field_errors }}</div>
+                {% endif %}
+
+                <div class="form-group">
+                    <label class="form-label">Full Name</label>
+                    {{ form.full_name }}
+                    {{ form.full_name.errors }}
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px;">
+                    <div class="form-group">
+                        <label class="form-label">Date of Birth</label>
+                        {{ form.date_of_birth }}
+                        {{ form.date_of_birth.errors }}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Gender</label>
+                        {{ form.gender }}
+                        {{ form.gender.errors }}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Membership Status</label>
+                        {{ form.status }}
+                        {{ form.status.errors }}
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                    <div class="form-group">
+                        <label class="form-label">Phone Number</label>
+                        {{ form.phone }}
+                        {{ form.phone.errors }}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email Address</label>
+                        {{ form.email }}
+                        {{ form.email.errors }}
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Permanent Address</label>
+                    {{ form.address }}
+                    {{ form.address.errors }}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Branch</label>
+                    {{ form.branch }}
+                    {{ form.branch.errors }}
+                </div>
+
+                <div style="margin-top: 24px; display: flex; gap: 12px;">
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">Update Member</button>
+                    <a href="{% url 'member_detail' member.pk %}" class="btn btn-outline">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

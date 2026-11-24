@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block page_title %}Savings & Deposit Accounts{% endblock %}
+
+{% block content %}
+<div class="card-panel">
+    <div class="card-header">
+        <div>
+            <h3>Member Accounts</h3>
+            <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+                Total Society Deposits: <strong style="color: var(--primary);">₹{{ total_balance|floatformat:2 }}</strong>
+            </p>
+        </div>
+        {% if is_manager %}
+        <div>
+            <a href="{% url 'account_create' %}" class="btn btn-primary">
+                ＋ Open New Account
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Filters -->
+    <div style="padding: 16px 20px; background: #fafcfb; border-bottom: 1px solid var(--border);">
+        <form method="GET" style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
+            <div style="flex: 2; min-width: 200px;">
+                <input type="text" name="q" value="{{ search_query }}" placeholder="Search account number or member name..." class="form-control" style="padding: 8px 12px;">
+            </div>
+
+            <div style="flex: 1; min-width: 140px;">
+                <select name="status" class="form-control" style="padding: 8px 12px;">
+                    <option value="">All Statuses</option>
+                    <option value="ACTIVE" {% if status_filter == 'ACTIVE' %}selected{% endif %}>Active</option>
+                    <option value="FROZEN" {% if status_filter == 'FROZEN' %}selected{% endif %}>Frozen</option>
+                    <option value="CLOSED" {% if status_filter == 'CLOSED' %}selected{% endif %}>Closed</option>
+                </select>
+            </div>
+
+            <div style="flex: 1; min-width: 140px;">
+                <select name="type" class="form-control" style="padding: 8px 12px;">
+                    <option value="">All Types</option>
+                    {% for t in account_types %}
+                    <option value="{{ t.id }}" {% if type_filter == t.id|stringformat:"s" %}selected{% endif %}>{{ t.get_name_display|default:t.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            {% if branches %}
+            <div style="flex: 1; min-width: 150px;">
+                <select name="branch" class="form-control" style="padding: 8px 12px;">
+                    <option value="">All Branches</option>
+                    {% for b in branches %}
+                    <option value="{{ b.id }}" {% if branch_filter == b.id|stringformat:"s" %}selected{% endif %}>{{ b.branch_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+
+            <div>
+                <button type="submit" class="btn btn-primary">Filter</button>
+                {% if search_query or status_filter or type_filter or branch_filter %}
+                <a href="{% url 'account_list' %}" class="btn btn-outline">Clear</a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    <div class="card-body" style="padding: 0;">
+        <div class="table-responsive">
+            <table class="banking-table">
+                <thead>
+                    <tr>
+                        <th>Account No</th>
+                        <th>Member Name</th>
+                        <th>Account Type</th>
+                        <th>Branch</th>
+                        <th>Current Balance</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for a in accounts %}
+                    <tr>
+                        <td><strong>{{ a.account_number }}</strong></td>
+                        <td>
+                            <a href="{% url 'member_detail' a.member.pk %}" style="color: var(--primary); font-weight: 600; text-decoration: none;">
+                                {{ a.member.full_name }}
+                            </a>
+                        </td>
+                        <td>{{ a.account_type.get_name_display|default:a.account_type.name }}</td>
+                        <td>{{ a.branch.branch_name }}</td>
+                        <td><strong style="color: var(--primary); font-size: 14.5px;">₹{{ a.current_balance|floatformat:2 }}</strong></td>
+                        <td>
+                            {% if a.status == 'ACTIVE' %}
+                                <span class="badge badge-active">Active</span>
+                            {% elif a.status == 'FROZEN' %}
+                                <span class="badge badge-pending">Frozen</span>
+                            {% else %}
+                                <span class="badge badge-inactive">Closed</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'account_detail' a.pk %}" class="btn btn-outline btn-sm">Statement</a>
+                            <a href="{% url 'deposit_create' %}?account={{ a.pk }}" class="btn btn-primary btn-sm">Deposit</a>
+                            <a href="{% url 'withdrawal_create' %}?account={{ a.pk }}" class="btn btn-outline btn-sm">Withdraw</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 36px; color: var(--text-muted);">
+                            No accounts found matching your query.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
